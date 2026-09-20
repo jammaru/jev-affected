@@ -50,7 +50,14 @@ npx jev-affected plan --base main
 npx jev-affected run --base main
 ```
 
-`plan` performs analysis but never executes task commands. `run` executes configured commands. **Only committed changes are included**: default head is `HEAD`, not the working tree. Commit agent edits before planning.
+`plan` performs analysis but never executes task commands. `run` executes configured commands. The default mode compares committed changes. Use `--working-tree` to include branch commits, staged changes, unstaged changes and untracked files, or `--staged` to analyze only the Git index.
+
+```sh
+npx jev-affected plan --working-tree --base main
+npx jev-affected plan --staged
+```
+
+`--working-tree` accepts `--base` but not `--head`. `--staged` compares the index with `HEAD` and cannot be combined with `--base` or `--head`.
 
 ## How it works
 
@@ -122,7 +129,7 @@ Low model probabilities are estimates, not a guarantee that a task is unnecessar
 | `doctor` | Check Node, config, Git base, API key and models endpoint |
 | `eval [--live]` | Evaluate fixture decisions and false-skip rate |
 
-Common flags: `--base`, `--head`, `--config`, `--no-cache`, `--json`, `--help`, `--version`. JSON task output includes a stable `version: 1`. During `run --json`, child output goes to stderr, keeping stdout parseable.
+Common flags: `--base`, `--head`, `--working-tree`, `--staged`, `--config`, `--no-cache`, `--json`, `--help`, `--version`. JSON task output includes a stable `version: 1`. During `run --json`, child output goes to stderr, keeping stdout parseable.
 
 Exit codes: `0` success; `1` failed executed task or failed evaluation gate; `2` config/argument/base or doctor check error; `3` internal/I/O failure. API failures do not fail a normal plan or run by themselves.
 
@@ -143,7 +150,7 @@ Install dependencies first. Do not expose credentials to untrusted PR code. Nx, 
 
 ## Agents
 
-After committing edits, run `jev-affected plan --json` and execute all tasks whose `decision` is `run`, or use `jev-affected run`. `inspect` lets you review what could leave the repository first.
+Run `jev-affected plan --json --working-tree` while editing, or use the default committed mode after committing. Execute all tasks whose `decision` is `run`, or use `jev-affected run` with the same mode. `inspect` lets you review what could leave the repository first.
 
 The package includes a reusable agent skill at [`skills/jev-affected`](skills/jev-affected). Point a compatible coding agent at that directory, or copy it into the agent's skills directory, to give it the safe planning and execution workflow.
 
@@ -184,11 +191,11 @@ No backend and no telemetry. Data is read locally; semantic inputs go directly t
 
 **What if Jev is down?** Candidate tasks run. Deterministic rules and protected tasks still apply.
 
-**Are uncommitted files included?** No, v0.1 compares commits. Explicit refs make the input reproducible.
+**Are uncommitted files included?** Only with `--working-tree` or `--staged`. Default mode compares commits so explicit refs remain reproducible.
 
 ## Roadmap
 
-v0.1 focuses on inspectable semantic dependencies and safe task plans. Later candidates: working-tree mode, historical evaluations, watch mode, task groups and Nx/Turbo adapters. No GUI, SaaS, MCP server or autonomous command generation is included.
+The current release focuses on inspectable semantic dependencies and safe plans for committed, working-tree and staged changes. Later candidates include historical evaluations, watch mode, task groups and Nx/Turbo adapters. No GUI, SaaS, MCP server or autonomous command generation is included.
 
 ## Contributing and license
 

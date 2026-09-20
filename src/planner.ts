@@ -7,7 +7,13 @@ import {
   resolveApiKey,
   secretPatterns,
 } from "./config.js";
-import { type ChangeState, collectChanges, git, matches } from "./git.js";
+import {
+  type ChangeOptions,
+  type ChangeState,
+  collectChanges,
+  git,
+  matches,
+} from "./git.js";
 import {
   type AnalysisResult,
   type DecisionProvider,
@@ -38,15 +44,14 @@ export interface Plan {
     usage?: AnalysisResult["usage"];
   };
 }
-export async function createPlan(input: {
-  config: Config;
-  cwd?: string;
-  base?: string;
-  head?: string;
-  state?: ChangeState;
-  provider?: DecisionProvider;
-  cache?: boolean;
-}): Promise<Plan> {
+export async function createPlan(
+  input: {
+    config: Config;
+    state?: ChangeState;
+    provider?: DecisionProvider;
+    cache?: boolean;
+  } & ChangeOptions,
+): Promise<Plan> {
   const start = Date.now(),
     config = parseConfig(input.config),
     cwd = input.cwd ?? process.cwd();

@@ -38,6 +38,8 @@ async function main() {
         help: { type: "boolean", short: "h" },
         version: { type: "boolean", short: "v" },
         "no-cache": { type: "boolean" },
+        "working-tree": { type: "boolean" },
+        staged: { type: "boolean" },
         fixtures: { type: "string" },
         live: { type: "boolean" },
       },
@@ -66,6 +68,8 @@ Options:
   --config <file>    YAML configuration
   --json            Machine-readable output
   --no-cache        Bypass the local decision cache
+  --working-tree    Include committed, staged, unstaged and untracked changes
+  --staged          Analyze only changes staged against HEAD
   --parallel        Execute selected commands concurrently
   --concurrency <n>  Maximum parallel commands
   --fixtures <dir>  Evaluation fixtures (default evals/fixtures)
@@ -83,6 +87,12 @@ inspect never sends requests. plan never executes task commands.`);
     throw new ConfigError("Unknown command. See --help.");
   if (positionals.length > (command === "why" ? 2 : 1))
     throw new ConfigError("Unexpected positional arguments.");
+  if (v["working-tree"] && v.staged)
+    throw new ConfigError("Use --working-tree or --staged, not both.");
+  if (v["working-tree"] && v.head)
+    throw new ConfigError("--working-tree cannot be combined with --head.");
+  if (v.staged && (v.base || v.head))
+    throw new ConfigError("--staged cannot be combined with --base or --head.");
   const emit = (x: unknown) => console.log(JSON.stringify(x, null, 2));
   if (command === "init") {
     try {
@@ -118,6 +128,8 @@ inspect never sends requests. plan never executes task commands.`);
     base: typeof v.base === "string" ? v.base : undefined,
     head: typeof v.head === "string" ? v.head : undefined,
     cache: !v["no-cache"],
+    workingTree: !!v["working-tree"],
+    staged: !!v.staged,
   };
   if (
     command === "why" &&

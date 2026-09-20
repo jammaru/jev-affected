@@ -1,4 +1,6 @@
 import { execFile } from "node:child_process";
+import { stat } from "node:fs/promises";
+import { resolve as resolvePath } from "node:path";
 import { promisify } from "node:util";
 import picomatch from "picomatch";
 import { type Config, ConfigError, secretPatterns } from "./config.js";
@@ -29,11 +31,47 @@ export interface ChangeState {
   incomplete: boolean;
   warnings: string[];
 }
+export interface ChangeOptions {
+  cwd?: string;
+  base?: string;
+  head?: string;
+  workingTree?: boolean;
+  staged?: boolean;
+}
+const hasUnsupportedPatch = (patch: string) =>
+  /^Binary files .+ differ$/m.test(patch) ||
+  /^[+-]Subproject commit [0-9a-f]{7,}(?:-dirty)?$/m.test(patch);
+async function untrackedPatch(cwd: string, path: string) {
+  try {
+    return await git(
+      cwd,
+      "diff",
+      "--no-index",
+      "--no-ext-diff",
+      "--no-textconv",
+      "--unified=3",
+      "--",
+      "/dev/null",
+      path,
+    );
+  } catch (error) {
+    const result = error as { code?: number | string; stdout?: string };
+    if (Number(result.code) === 1 && typeof result.stdout === "string")
+      return result.stdout;
+    throw error;
+  }
+}
 export async function collectChanges(
   config: Config,
-  options: { cwd?: string; base?: string; head?: string } = {},
+  options: ChangeOptions = {},
 ): Promise<ChangeState> {
   const cwd = options.cwd ?? process.cwd();
+  if (options.workingTree && options.staged)
+    throw new ConfigError("Use --working-tree or --staged, not both.");
+  if (options.workingTree && options.head)
+    throw new ConfigError("--working-tree cannot be combined with --head.");
+  if (options.staged && (options.base || options.head))
+    throw new ConfigError("--staged cannot be combined with --base or --head.");
   const resolve = async (ref: string) =>
     (
       await git(
@@ -44,13 +82,13 @@ export async function collectChanges(
         `${ref}^{commit}`,
       )
     ).trim();
-  let head: string;
+  let headCommit: string;
   try {
-    head = await resolve(options.head ?? "HEAD");
+    headCommit = await resolve(options.head ?? "HEAD");
   } catch {
     throw new ConfigError("Cannot resolve head commit.");
   }
-  const explicit = options.base ?? config.base;
+  const explicit = options.staged ? "HEAD" : (options.base ?? config.base);
   const candidates = explicit
     ? [explicit]
     : [
@@ -64,7 +102,9 @@ export async function collectChanges(
   let base: string | undefined;
   for (const ref of candidates) {
     try {
-      base = (await git(cwd, "merge-base", await resolve(ref), head)).trim();
+      base = options.staged
+        ? await resolve("HEAD")
+        : (await git(cwd, "merge-base", await resolve(ref), headCommit)).trim();
       break;
     } catch {}
   }
@@ -72,6 +112,11 @@ export async function collectChanges(
     throw new ConfigError(
       "Cannot resolve Git base. Fetch the base branch or pass --base.",
     );
+  const comparison = options.staged
+    ? ["--cached", base]
+    : options.workingTree
+      ? [base]
+      : [base, headCommit];
   const parts = (
     await git(
       cwd,
@@ -79,8 +124,7 @@ export async function collectChanges(
       "--name-status",
       "-z",
       "--find-renames",
-      base,
-      head,
+      ...comparison,
       "--",
     )
   ).split("\0");
@@ -95,9 +139,26 @@ export async function collectChanges(
       files.push({ status, oldPath: path, path: target });
     } else files.push({ status, path });
   }
+  if (options.workingTree) {
+    const tracked = new Set(
+      files.flatMap((file) => [
+        file.path,
+        ...(file.oldPath ? [file.oldPath] : []),
+      ]),
+    );
+    for (const path of (
+      await git(cwd, "ls-files", "--others", "--exclude-standard", "-z", "--")
+    ).split("\0")) {
+      if (path && !tracked.has(path)) files.push({ status: "A", path });
+    }
+  }
   const state: ChangeState = {
     base,
-    head,
+    head: options.staged
+      ? "INDEX"
+      : options.workingTree
+        ? "WORKTREE"
+        : headCommit,
     files: [],
     diff: "",
     incomplete: false,
@@ -117,22 +178,34 @@ export async function collectChanges(
     if (paths.every((p) => matches(p, config.ignore))) continue;
     state.files.push(file);
     try {
-      const patch = await git(
-        cwd,
-        "diff",
-        "--no-ext-diff",
-        "--no-textconv",
-        "--find-renames",
-        "--unified=3",
-        base,
-        head,
-        "--",
-        ...paths,
-      );
-      if (
-        patch.includes("Binary files ") ||
-        patch.includes("Subproject commit ")
-      ) {
+      if (options.workingTree && file.status === "A") {
+        const size = (await stat(resolvePath(cwd, file.path))).size;
+        if (
+          Buffer.byteLength(state.diff) + size >
+          config.analysis.maxDiffBytes
+        ) {
+          state.incomplete = true;
+          state.warnings.push(
+            "Diff exceeds analysis limit; running all tasks.",
+          );
+          continue;
+        }
+      }
+      const patch =
+        options.workingTree && file.status === "A"
+          ? await untrackedPatch(cwd, file.path)
+          : await git(
+              cwd,
+              "diff",
+              "--no-ext-diff",
+              "--no-textconv",
+              "--find-renames",
+              "--unified=3",
+              ...(options.staged ? ["--cached", base] : comparison),
+              "--",
+              ...paths,
+            );
+      if (hasUnsupportedPatch(patch)) {
         state.incomplete = true;
         state.warnings.push("Binary or submodule change; running all tasks.");
       }

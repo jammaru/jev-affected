@@ -51,6 +51,9 @@ it("inspect never needs an API key and shows the sanitized diff", async () => {
 it("invalid arguments and unknown tasks exit 2", async () => {
   await expect(run("plan", "--typo")).rejects.toMatchObject({ code: 2 });
   await expect(run("why", "missing")).rejects.toMatchObject({ code: 2 });
+  await expect(run("plan", "--working-tree", "--staged")).rejects.toMatchObject(
+    { code: 2 },
+  );
 });
 it("init refuses to overwrite an existing config", async () => {
   await expect(run("init")).rejects.toMatchObject({ code: 2 });

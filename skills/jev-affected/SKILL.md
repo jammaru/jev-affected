@@ -13,12 +13,13 @@ projects and `npx jev-affected` elsewhere.
 1. Confirm the current directory is a Git repository and locate
    `jev-affected.yml`. Run `jev-affected init` only when setup is requested and no
    configuration exists.
-2. Ensure the relevant edits are committed. Version 0.1 compares commits and does
-   not include working-tree changes.
-3. On first use, or when privacy matters, run
-   `jev-affected inspect --base <ref>`. This previews the sanitized input locally
-   without sending a request.
-4. Run `jev-affected plan --json --base <ref>` and use its task decisions as the
+2. Choose the input mode. Use the default mode for committed branch changes,
+   `--working-tree --base <ref>` while editing, or `--staged` for the exact Git
+   index before a commit.
+3. On first use, or when privacy matters, run `jev-affected inspect` with the
+   same mode and base flags intended for planning. This previews the sanitized
+   input locally without sending a request.
+4. Run `jev-affected plan --json` with those same flags and use its task decisions as the
    record of what should run. Do not invent task reasons or commands.
 5. Run `jev-affected run --base <ref>` only when execution is requested. Commands
    come from the repository configuration and should be treated as repository

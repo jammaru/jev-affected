@@ -170,6 +170,57 @@ async function repo() {
   return cwd;
 }
 describe("Git integration", () => {
+  it("collects tracked and untracked working-tree changes", async () => {
+    const cwd = await repo();
+    await writeFile(join(cwd, "auth.ts"), "export const ttl = 7200;\n");
+    await writeFile(join(cwd, "new file.ts"), "export const added = true;\n");
+    const s = await collectChanges(config, {
+      cwd,
+      base: "HEAD",
+      workingTree: true,
+    });
+    expect(s.head).toBe("WORKTREE");
+    expect(s.files.map((file) => file.path)).toEqual([
+      "auth.ts",
+      "new file.ts",
+    ]);
+    expect(s.diff).toContain("7200");
+    expect(s.diff).toContain("added = true");
+    expect(s.incomplete).toBe(false);
+  });
+  it("does not mistake source text for a submodule patch", async () => {
+    const cwd = await repo();
+    await writeFile(
+      join(cwd, "auth.ts"),
+      'export const marker = "Subproject commit ";\n',
+    );
+    const s = await collectChanges(config, {
+      cwd,
+      base: "HEAD",
+      workingTree: true,
+    });
+    expect(s.incomplete).toBe(false);
+  });
+  it("collects the index without later unstaged edits", async () => {
+    const cwd = await repo();
+    await writeFile(join(cwd, "auth.ts"), "export const ttl = 7200;\n");
+    await git(cwd, "add", "auth.ts");
+    await writeFile(join(cwd, "auth.ts"), "export const ttl = 14400;\n");
+    const s = await collectChanges(config, { cwd, staged: true });
+    expect(s.head).toBe("INDEX");
+    expect(s.files.map((file) => file.path)).toEqual(["auth.ts"]);
+    expect(s.diff).toContain("7200");
+    expect(s.diff).not.toContain("14400");
+  });
+  it("rejects ambiguous working-tree modes", async () => {
+    const cwd = await repo();
+    await expect(
+      collectChanges(config, { cwd, workingTree: true, staged: true }),
+    ).rejects.toThrow(/not both/);
+    await expect(
+      collectChanges(config, { cwd, staged: true, base: "main" }),
+    ).rejects.toThrow(/cannot be combined/);
+  });
   it("collects committed diff and excludes secrets before transmission", async () => {
     const cwd = await repo();
     await writeFile(join(cwd, ".env"), "API_KEY=do-not-transmit");
