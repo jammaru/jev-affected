@@ -1,0 +1,7 @@
+interface:
+  display_name: "jev-affected"
+  short_description: "Plan semantic checks for committed code changes"
+  icon_small: "../assets/icon-small.svg"
+  icon_large: "../assets/icon-large.svg"
+  brand_color: "#DAFB73"
+  default_prompt: "Use $jev-affected to inspect my committed changes, plan affected tasks, and run the selected checks."

@@ -1,0 +1,53 @@
+{
+  "name": "api-response-field",
+  "provenance": "Synthetic SDK-shaped responses, not recorded Jev output; live model quality is unverified.",
+  "config": {
+    "version": 1,
+    "tasks": {
+      "auth": {
+        "command": "node -e \"console.log('auth tests')\"",
+        "when": "Could authentication, session or cookie behavior change?"
+      },
+      "sdk": {
+        "command": "node -e \"console.log('SDK generation')\"",
+        "when": "Could the public API contract change?"
+      },
+      "db": {
+        "command": "node -e \"console.log('database tests')\"",
+        "when": "Could database schemas or persistence change?"
+      },
+      "benchmark": {
+        "command": "node -e \"console.log('benchmark')\"",
+        "when": "Could a performance-sensitive execution path materially change?"
+      }
+    }
+  },
+  "state": {
+    "base": "fixture-base",
+    "head": "fixture-head",
+    "files": [
+      {
+        "path": "src/api.ts",
+        "status": "M"
+      }
+    ],
+    "diff": "diff --git a/src/api.ts b/src/api.ts\n--- a/src/api.ts\n+++ b/src/api.ts\n@@ -1 +1 @@\n-return {id}\n+return {id, name}\n",
+    "incomplete": false,
+    "warnings": []
+  },
+  "response": {
+    "model": "jev-1.13.0",
+    "probabilities": {
+      "auth": 0.01,
+      "sdk": 0.95,
+      "db": 0.01,
+      "benchmark": 0.01
+    }
+  },
+  "expected": {
+    "auth": "skip",
+    "sdk": "run",
+    "db": "skip",
+    "benchmark": "skip"
+  }
+}

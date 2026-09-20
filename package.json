@@ -1,0 +1,84 @@
+{
+  "name": "jev-affected",
+  "version": "0.1.0",
+  "description": "Semantic task routing for software development, powered by Jev.",
+  "type": "module",
+  "license": "MIT",
+  "author": "jammaru",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jammaru/jev-affected.git"
+  },
+  "homepage": "https://github.com/jammaru/jev-affected#readme",
+  "bugs": {
+    "url": "https://github.com/jammaru/jev-affected/issues"
+  },
+  "keywords": [
+    "jev",
+    "testing",
+    "ci",
+    "semantic",
+    "task-runner",
+    "developer-tools"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "bin": {
+    "jev-affected": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "assets",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "examples",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md",
+    "EVALUATION.md",
+    ".env.example",
+    "evals",
+    "skills"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "smoke": "node scripts/smoke.mjs",
+    "eval": "node dist/cli.js eval",
+    "eval:live": "node dist/cli.js eval --live",
+    "pretest": "pnpm build",
+    "demo": "node scripts/demo.mjs",
+    "prepack": "tsc"
+  },
+  "dependencies": {
+    "@typesafe-ai/sdk": "^0.6.0",
+    "dotenv": "^17.2.2",
+    "picomatch": "^4.0.7",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.14",
+    "@changesets/cli": "^2.31.1",
+    "@types/node": "^22.20.4",
+    "@types/picomatch": "^4.0.3",
+    "typescript": "^7.0.2",
+    "vitest": "^3.2.7"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

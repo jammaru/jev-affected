@@ -1,0 +1,11 @@
+name: Bug report
+description: Report a reproducible problem without private code or credentials.
+body:
+  - type: textarea
+    attributes:
+      label: Reproduction, expected behavior and actual behavior
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: jev-affected, Node and OS versions

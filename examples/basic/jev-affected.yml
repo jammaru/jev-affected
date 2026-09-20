@@ -1,0 +1,16 @@
+version: 1
+defaults:
+  skipBelow: 0.10
+tasks:
+  auth-e2e:
+    command: npm run test:auth
+    when: Could authentication, authorization, sessions, cookies or login behavior change?
+  api-contract:
+    command: npm run test:contract
+    when: Could a public API request, response, status code or header change?
+  sdk:
+    command: npm run generate:sdk
+    when: Could the public API contract change?
+  typecheck:
+    command: npm run typecheck
+    always: true

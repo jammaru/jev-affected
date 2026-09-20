@@ -1,0 +1,6 @@
+{
+  "files": { "includes": ["src/**", "tests/**", "scripts/**", "*.json"] },
+  "formatter": { "indentStyle": "space" },
+  "linter": { "enabled": true, "rules": { "preset": "recommended" } },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } }
+}
