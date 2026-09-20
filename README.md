@@ -2,7 +2,7 @@
 
 <p align="center"><strong>Semantic task routing for software development.</strong></p>
 <p align="center">Run tasks based on what changed, not where it changed.</p>
-<p align="center">v0.2.0 Public Beta · Node.js 20+ · TypeScript · MIT · Jev-powered</p>
+<p align="center">v0.3.0 Public Beta · Node.js 20+ · TypeScript · MIT · Jev-powered</p>
 
 ![Illustrative offline fixture demo, not live Jev output](assets/demo.gif)
 

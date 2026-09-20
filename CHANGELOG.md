@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0
+
+- Add a repository-owned `jev-affected.yml` for dogfooding this project.
+- Analyze committed, working-tree, or staged changes with explicit input modes.
+- Detect pull-request base branches across GitHub Actions, GitLab CI, Buildkite,
+  and mapped CircleCI pipeline values.
+- Inspect and safely clear the Git-local semantic decision cache.
+- Avoid treating source text that mentions Git submodule markers as an actual
+  submodule diff.
+
 ## 0.2.0
 
 - Read API credentials from the process environment only.

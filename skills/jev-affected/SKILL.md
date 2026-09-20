@@ -27,6 +27,10 @@ projects and `npx jev-affected` elsewhere.
 6. Report the selected and skipped task counts, actual model version, warnings,
    fallback decisions, and any failed task commands.
 
+Use `jev-affected cache status` to inspect the Git-local decision cache. Use
+`jev-affected cache clear` when a fresh semantic decision is needed; it removes
+only the cache directory resolved inside Git metadata.
+
 Use an explicit base ref in CI and shallow clones. Fetch enough history for Git to
 compute the merge base.
 
