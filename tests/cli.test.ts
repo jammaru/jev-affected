@@ -58,3 +58,12 @@ it("invalid arguments and unknown tasks exit 2", async () => {
 it("init refuses to overwrite an existing config", async () => {
   await expect(run("init")).rejects.toMatchObject({ code: 2 });
 });
+it("reports cache status without loading configuration", async () => {
+  const result = await run("cache", "status", "--json");
+  expect(JSON.parse(result.stdout)).toMatchObject({
+    action: "status",
+    entries: 0,
+    bytes: 0,
+  });
+  await expect(run("cache", "unknown")).rejects.toMatchObject({ code: 2 });
+});

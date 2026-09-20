@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { TypeSafeClient } from "@typesafe-ai/sdk";
+import { clearCache, inspectCache } from "./cache.js";
 import { ConfigError, loadConfig, resolveApiKey, template } from "./config.js";
 import { evaluate } from "./eval.js";
 import { executePlan } from "./executor.js";
@@ -61,7 +62,7 @@ async function main() {
     console.log(`jev-affected — Semantic task routing, powered by Jev.
 
 Usage: jev-affected <command> [options]
-Commands: init, plan, run, why <task>, inspect, doctor, eval
+Commands: init, plan, run, why <task>, inspect, doctor, eval, cache [status|clear]
 Options:
   --base <ref>       Compare from merge-base(ref, head)
   --head <ref>       Head commit (default HEAD; committed changes only)
@@ -80,12 +81,19 @@ inspect never sends requests. plan never executes task commands.`);
     return;
   }
   if (
-    !["init", "plan", "run", "why", "inspect", "doctor", "eval"].includes(
-      command,
-    )
+    ![
+      "init",
+      "plan",
+      "run",
+      "why",
+      "inspect",
+      "doctor",
+      "eval",
+      "cache",
+    ].includes(command)
   )
     throw new ConfigError("Unknown command. See --help.");
-  if (positionals.length > (command === "why" ? 2 : 1))
+  if (positionals.length > (["why", "cache"].includes(command) ? 2 : 1))
     throw new ConfigError("Unexpected positional arguments.");
   if (v["working-tree"] && v.staged)
     throw new ConfigError("Use --working-tree or --staged, not both.");
@@ -94,6 +102,22 @@ inspect never sends requests. plan never executes task commands.`);
   if (v.staged && (v.base || v.head))
     throw new ConfigError("--staged cannot be combined with --base or --head.");
   const emit = (x: unknown) => console.log(JSON.stringify(x, null, 2));
+  if (command === "cache") {
+    const action = positionals[1] ?? "status";
+    if (!["status", "clear"].includes(action))
+      throw new ConfigError("Use cache status or cache clear.");
+    const info = action === "clear" ? await clearCache() : await inspectCache();
+    if (v.json) emit({ action, ...info });
+    else if (action === "clear")
+      console.log(
+        `Cleared ${info.entries} cache entries (${info.bytes} bytes).`,
+      );
+    else
+      console.log(
+        `Cache: ${info.entries} entries, ${info.bytes} bytes\n${info.path}`,
+      );
+    return;
+  }
   if (command === "init") {
     try {
       await writeFile(String(v.config ?? "jev-affected.yml"), template, {

@@ -128,6 +128,7 @@ Low model probabilities are estimates, not a guarantee that a task is unnecessar
 | `inspect` | Preview sanitized analysis inputs locally; no request |
 | `doctor` | Check Node, config, Git base, API key and models endpoint |
 | `eval [--live]` | Evaluate fixture decisions and false-skip rate |
+| `cache [status\|clear]` | Inspect or remove the Git-local decision cache |
 
 Common flags: `--base`, `--head`, `--working-tree`, `--staged`, `--config`, `--no-cache`, `--json`, `--help`, `--version`. JSON task output includes a stable `version: 1`. During `run --json`, child output goes to stderr, keeping stdout parseable.
 
@@ -174,6 +175,8 @@ const plan = await createPlan({ config, base: 'main' });
 ```
 
 Automatic caches store probabilities and model metadata in `.git/jev-affected/cache` (including Git worktree support). Keys include state, questions, configuration and pinned actual model version. Corrupt cache entries fall back to RUN. **Moving aliases such as `jev-latest` bypass caching**, because an alias cannot safely establish its current actual version without another request. Pin an actual `jev-x.y.z` version to enable reuse. Neither patches nor API keys are stored in cache payloads. Cache writes are the only local side effect of `plan`; `--no-cache` disables them.
+
+Use `jev-affected cache status` to inspect entry count and size, and `jev-affected cache clear` to remove only the cache directory resolved inside Git metadata. Both commands support `--json` and do not require a project configuration file.
 
 ## Evaluation
 

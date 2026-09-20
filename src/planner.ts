@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { cacheDirectory } from "./cache.js";
 import {
   type Config,
   parseConfig,
@@ -11,7 +12,6 @@ import {
   type ChangeOptions,
   type ChangeState,
   collectChanges,
-  git,
   matches,
 } from "./git.js";
 import {
@@ -120,12 +120,7 @@ export async function createPlan(
     const pinned = /^jev-\d+\.\d+\.\d+$/.test(config.model);
     if (input.cache !== false && !input.provider && pinned) {
       try {
-        const dir = resolve(
-          cwd,
-          (
-            await git(cwd, "rev-parse", "--git-path", "jev-affected/cache")
-          ).trim(),
-        );
+        const dir = await cacheDirectory(cwd);
         const key = createHash("sha256")
           .update(
             JSON.stringify({

@@ -1,4 +1,10 @@
 export {
+  type CacheInfo,
+  cacheDirectory,
+  clearCache,
+  inspectCache,
+} from "./cache.js";
+export {
   API_KEY_VARS,
   type Config,
   ConfigError,

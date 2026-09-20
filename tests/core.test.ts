@@ -1,7 +1,8 @@
-import { mkdtemp, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rename, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { cacheDirectory, clearCache, inspectCache } from "../src/cache.js";
 import { parseConfig, resolveApiKey } from "../src/config.js";
 import { evaluate } from "../src/eval.js";
 import { executePlan } from "../src/executor.js";
@@ -175,6 +176,16 @@ async function repo() {
   return cwd;
 }
 describe("Git integration", () => {
+  it("inspects and clears only the Git-local decision cache", async () => {
+    const cwd = await repo();
+    const directory = await cacheDirectory(cwd);
+    await mkdir(directory, { recursive: true });
+    await writeFile(join(directory, "one.json"), "{}", { mode: 0o600 });
+    await writeFile(join(directory, "note.txt"), "ignored");
+    expect(await inspectCache(cwd)).toMatchObject({ entries: 1, bytes: 2 });
+    expect(await clearCache(cwd)).toMatchObject({ entries: 1, bytes: 2 });
+    expect(await inspectCache(cwd)).toMatchObject({ entries: 0, bytes: 0 });
+  });
   it("orders CI base candidates without duplicates", () => {
     expect(
       detectCiBaseCandidates({
