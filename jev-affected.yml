@@ -1,0 +1,52 @@
+version: 1
+model: jev-1.13.0
+defaults:
+  skipBelow: 0.10
+analysis:
+  maxDiffBytes: 100000
+  timeoutMs: 10000
+tasks:
+  tests:
+    command: pnpm test
+    include:
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "evals/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "tsconfig.json"
+      - "biome.json"
+      - "jev-affected.yml"
+    when: Could this change alter runtime behavior, configuration parsing, Git analysis, task planning, execution, evaluation, or CLI output?
+  package-smoke:
+    command: pnpm smoke
+    include:
+      - "src/**"
+      - "scripts/smoke.mjs"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "tsconfig.json"
+      - "jev-affected.yml"
+    when: Could this change affect the published package contents, exports, executable, installation, or packaged offline evaluation?
+  offline-eval:
+    command: pnpm eval
+    include:
+      - "src/**"
+      - "evals/**"
+      - "package.json"
+      - "jev-affected.yml"
+    when: Could this change affect semantic task decisions, thresholds, provider responses, evaluation metrics, or evaluation gates?
+  lint:
+    command: pnpm lint
+    include:
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "*.json"
+      - "*.ts"
+      - "jev-affected.yml"
+    when: Could this change introduce a formatting, static-analysis, or repository convention violation?
+  typecheck:
+    command: pnpm typecheck
+    always: true
