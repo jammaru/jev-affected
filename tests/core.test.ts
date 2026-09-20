@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rename, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { parseConfig } from "../src/config.js";
+import { parseConfig, resolveApiKey } from "../src/config.js";
 import { evaluate } from "../src/eval.js";
 import { executePlan } from "../src/executor.js";
 import { type ChangeState, collectChanges, git } from "../src/git.js";
@@ -33,6 +33,25 @@ const provider = (
   model = "jev-1.13.0",
 ) => ({ analyze: vi.fn(async () => ({ model, probabilities })) });
 describe("safe decisions", () => {
+  it("reads API credentials from the process environment only", () => {
+    expect(
+      resolveApiKey({
+        TYPESAFE_API_KEY: "  primary-key  ",
+        TYPESAFEAI_API_KEY: "fallback-key",
+      }),
+    ).toBe("primary-key");
+    expect(resolveApiKey({ TYPESAFEAI_API_KEY: "fallback-key" })).toBe(
+      "fallback-key",
+    );
+    expect(resolveApiKey({})).toBeUndefined();
+    expect(() =>
+      parseConfig({
+        version: 1,
+        apiKey: "must-not-live-in-config",
+        tasks: { a: { command: "true", when: "x" } },
+      }),
+    ).toThrow(/process environment/);
+  });
   it("skips only strictly below threshold; protects always tasks", async () => {
     const p = provider({ auth: 0.1, sdk: 0.099 });
     const plan = await createPlan({ config, state, provider: p });

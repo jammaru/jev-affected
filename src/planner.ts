@@ -1,7 +1,12 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { type Config, parseConfig, secretPatterns } from "./config.js";
+import {
+  type Config,
+  parseConfig,
+  resolveApiKey,
+  secretPatterns,
+} from "./config.js";
 import { type ChangeState, collectChanges, git, matches } from "./git.js";
 import {
   type AnalysisResult,
@@ -143,6 +148,7 @@ export async function createPlan(input: {
           questions,
           model: config.model,
           timeoutMs: config.analysis.timeoutMs,
+          apiKey: resolveApiKey(),
         });
       }
       if (!result.model || !/^jev-\d+\.\d+\.\d+$/.test(result.model))

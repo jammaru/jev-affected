@@ -2,7 +2,7 @@
 
 <p align="center"><strong>Semantic task routing for software development.</strong></p>
 <p align="center">Run tasks based on what changed, not where it changed.</p>
-<p align="center">v0.1.0 Public Beta · Node.js 20+ · TypeScript · MIT · Jev-powered</p>
+<p align="center">v0.2.0 Public Beta · Node.js 20+ · TypeScript · MIT · Jev-powered</p>
 
 ![Illustrative offline fixture demo, not live Jev output](assets/demo.gif)
 
@@ -30,13 +30,7 @@ npm install -D jev-affected
 npx jev-affected init
 ```
 
-Create `.env` in the repository root. The CLI loads it automatically:
-
-```dotenv
-TYPESAFE_API_KEY=your_api_key_here
-```
-
-`.env` is ignored by this repository's generated `.gitignore`. Never put the key in `jev-affected.yml` or commit it. An existing process environment value takes precedence over `.env`. You can also set it for the current shell:
+Set the API key in the process environment. The CLI does not read dotenv files or accept API keys in `jev-affected.yml`.
 
 ```powershell
 $env:TYPESAFE_API_KEY = "your_api_key_here"
@@ -45,6 +39,8 @@ $env:TYPESAFE_API_KEY = "your_api_key_here"
 ```sh
 export TYPESAFE_API_KEY="your_api_key_here"
 ```
+
+For persistent local use, configure the variable in your shell profile or operating-system credential environment. Open a new terminal after changing persistent environment variables. `TYPESAFEAI_API_KEY` is accepted as a compatibility fallback.
 
 Configure your own trusted commands, commit your changes on a feature branch, then:
 
@@ -176,7 +172,7 @@ See [EVALUATION.md](EVALUATION.md) for the methodology, release gates, latest li
 
 ## Privacy
 
-No backend and no telemetry. Data is read locally; semantic inputs go directly to TypeSafe through its SDK. By default, `.env*`, PEM/key files, and names containing `credentials`, `secret` or `token` are withheld. Custom exclusions add to these defaults. Filename exclusions cannot find every secret embedded in arbitrary source files: inspect inputs and use appropriate repository practices. SDK logging is explicitly disabled.
+No backend and no telemetry. Data is read locally; semantic inputs go directly to TypeSafe through its SDK. API keys are read from the process environment only. By default, `.env*`, PEM/key files, and names containing `credentials`, `secret` or `token` are withheld. Custom exclusions add to these defaults. Filename exclusions cannot find every secret embedded in arbitrary source files: inspect inputs and use appropriate repository practices. SDK logging is explicitly disabled.
 
 `TYPESAFE_BASE_URL` is honored by the official SDK; inspect this environment setting before use. Review [TypeSafe's data-processing terms](https://typesafe.ai/legal/mca) for your organization.
 

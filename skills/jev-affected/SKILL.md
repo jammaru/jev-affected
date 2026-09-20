@@ -31,10 +31,9 @@ compute the merge base.
 
 ## Credentials and data
 
-Set `TYPESAFE_API_KEY` in the process environment or a repository-local `.env`
-file. Never print the value, commit `.env`, or store the key in
-`jev-affected.yml`. An existing process environment value takes precedence over
-`.env`.
+Set `TYPESAFE_API_KEY` in the process environment or CI secret store. Never
+print the value or store the key in `jev-affected.yml`. The CLI does not load
+dotenv files. `TYPESAFEAI_API_KEY` is accepted as a compatibility fallback.
 
 `inspect` stays local. `plan`, `why`, and `run` can send the sanitized committed
 diff and configured semantic questions to the provider. Review `inspect` output

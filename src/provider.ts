@@ -5,6 +5,7 @@ export interface AnalysisInput {
   questions: Record<string, string>;
   model: string;
   timeoutMs: number;
+  apiKey?: string;
 }
 export interface AnalysisResult {
   model: string;
@@ -17,6 +18,7 @@ export interface DecisionProvider {
 export class JevProvider implements DecisionProvider {
   async analyze(input: AnalysisInput): Promise<AnalysisResult> {
     const client = new TypeSafeClient({
+      apiKey: input.apiKey,
       logLevel: "off",
       timeout: input.timeoutMs,
       retry: { maxRetries: 0 },

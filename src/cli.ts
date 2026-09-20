@@ -4,14 +4,11 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { TypeSafeClient } from "@typesafe-ai/sdk";
-import { config as loadEnvFile } from "dotenv";
-import { ConfigError, loadConfig, template } from "./config.js";
+import { ConfigError, loadConfig, resolveApiKey, template } from "./config.js";
 import { evaluate } from "./eval.js";
 import { executePlan } from "./executor.js";
 import { collectChanges, matches } from "./git.js";
 import { createPlan, type Plan } from "./planner.js";
-
-loadEnvFile({ quiet: true });
 
 function render(plan: Plan) {
   return [
@@ -168,11 +165,12 @@ inspect never sends requests. plan never executes task commands.`);
     return;
   }
   if (command === "doctor") {
+    const apiKey = resolveApiKey();
     const checks: Record<string, boolean | string> = {
       node: Number(process.versions.node.split(".")[0]) >= 20,
       config: true,
       tasks: Object.keys(config.tasks).length.toString(),
-      apiKey: !!process.env.TYPESAFE_API_KEY?.trim(),
+      apiKey: !!apiKey,
     };
     try {
       await collectChanges(config, opts);
@@ -183,6 +181,7 @@ inspect never sends requests. plan never executes task commands.`);
     if (checks.apiKey) {
       try {
         await new TypeSafeClient({
+          apiKey,
           logLevel: "off",
           timeout: config.analysis.timeoutMs,
           retry: { maxRetries: 0 },

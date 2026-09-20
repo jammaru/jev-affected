@@ -34,10 +34,10 @@ Run on 2026-09-21 with `jev-1.13.0` and `skipBelow: 0.10`:
 | False skips | 0 |
 | Invalid cases | 0 |
 | Cases with reduction | 6 |
-| Task reduction | 46.43% |
-| Unnecessary-run rate | 45.83% |
+| Task reduction | 42.86% |
+| Unnecessary-run rate | 50.00% |
 | API calls | 7 |
-| Total latency | 2,139 ms |
+| Total latency | 2,126 ms |
 | Input tokens | 2,882 |
 | Output tokens | 476 |
 
@@ -47,7 +47,7 @@ Selected tasks by fixture:
 | --- | ---: |
 | API field | 3 / 4 |
 | Authentication | 4 / 4 |
-| Comment | 1 / 4 |
+| Comment | 2 / 4 |
 | Database schema | 3 / 4 |
 | Documentation | 0 / 4 |
 | Logging | 1 / 4 |
@@ -65,8 +65,8 @@ pnpm eval:live
 
 `pnpm eval` uses deterministic synthetic answers and verifies evaluation and
 decision plumbing without making a network request. `pnpm eval:live` reads
-`TYPESAFE_API_KEY` from the process environment or a local `.env` file and sends
-the fixture inputs to Jev.
+`TYPESAFE_API_KEY` from the process environment and sends the fixture inputs to
+Jev. Dotenv files are not loaded.
 
 ## Limits
 

@@ -10,7 +10,7 @@ Do not post secrets or exploit details in a public issue. Once the public reposi
 
 ## Secret handling
 
-Set TYPESAFE_API_KEY through your environment or CI secret store. The application disables SDK logging and does not emit provider error bodies. Exclusion globs are additive; they cannot detect every embedded secret. Inspect your inputs before enabling remote analysis.
+Set TYPESAFE_API_KEY through the process environment or CI secret store. The CLI does not load dotenv files and rejects literal API keys in its YAML configuration. The application disables SDK logging and does not emit provider error bodies. Exclusion globs are additive; they cannot detect every embedded secret. Inspect your inputs before enabling remote analysis.
 
 ## External API calls
 

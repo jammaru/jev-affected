@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { parse } from "yaml";
 import { z } from "zod";
 export class ConfigError extends Error {}
+export const API_KEY_VARS = ["TYPESAFE_API_KEY", "TYPESAFEAI_API_KEY"] as const;
 const probability = z.number().min(0).max(1);
 const limits = z
   .object({
@@ -83,12 +84,27 @@ export const configSchema = z
   .strict();
 export type Config = z.infer<typeof configSchema>;
 export function parseConfig(value: unknown): Config {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const source = value as Record<string, unknown>;
+    if (Object.hasOwn(source, "apiKey") || Object.hasOwn(source, "api_key"))
+      throw new ConfigError(
+        "API keys are not supported in jev-affected.yml. Set TYPESAFE_API_KEY in the process environment or CI secret store.",
+      );
+  }
   const r = configSchema.safeParse(value);
   if (!r.success)
     throw new ConfigError(
       r.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("\n"),
     );
   return r.data;
+}
+export function resolveApiKey(
+  env: NodeJS.ProcessEnv = process.env,
+): string | undefined {
+  for (const name of API_KEY_VARS) {
+    const value = env[name]?.trim();
+    if (value) return value;
+  }
 }
 export async function loadConfig(path = "jev-affected.yml"): Promise<Config> {
   try {

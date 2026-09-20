@@ -3,5 +3,4 @@ dist/
 *.tgz
 coverage/
 .env*
-!.env.example
 videos/
