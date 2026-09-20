@@ -5,7 +5,12 @@ import { describe, expect, it, vi } from "vitest";
 import { parseConfig, resolveApiKey } from "../src/config.js";
 import { evaluate } from "../src/eval.js";
 import { executePlan } from "../src/executor.js";
-import { type ChangeState, collectChanges, git } from "../src/git.js";
+import {
+  type ChangeState,
+  collectChanges,
+  detectCiBaseCandidates,
+  git,
+} from "../src/git.js";
 import { createPlan } from "../src/planner.js";
 
 const state: ChangeState = {
@@ -170,6 +175,31 @@ async function repo() {
   return cwd;
 }
 describe("Git integration", () => {
+  it("orders CI base candidates without duplicates", () => {
+    expect(
+      detectCiBaseCandidates({
+        GITHUB_BASE_REF: "refs/heads/release",
+        GITLAB_CI: "true",
+        CI_MERGE_REQUEST_DIFF_BASE_SHA: "1234567890abcdef",
+        CI_MERGE_REQUEST_TARGET_BRANCH_NAME: "develop",
+        CI_DEFAULT_BRANCH: "develop",
+        BUILDKITE: "true",
+        BUILDKITE_PULL_REQUEST_BASE_BRANCH: "trunk",
+        CIRCLECI: "true",
+        CIRCLE_PR_BASE_BRANCH: "main",
+      }),
+    ).toEqual([
+      "origin/release",
+      "release",
+      "1234567890abcdef",
+      "origin/develop",
+      "develop",
+      "origin/trunk",
+      "trunk",
+      "origin/main",
+      "main",
+    ]);
+  });
   it("collects tracked and untracked working-tree changes", async () => {
     const cwd = await repo();
     await writeFile(join(cwd, "auth.ts"), "export const ttl = 7200;\n");

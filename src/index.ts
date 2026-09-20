@@ -12,6 +12,7 @@ export {
   type ChangeOptions,
   type ChangeState,
   collectChanges,
+  detectCiBaseCandidates,
 } from "./git.js";
 export { createPlan, type Plan, type TaskDecision } from "./planner.js";
 export {

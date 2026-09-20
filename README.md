@@ -133,7 +133,7 @@ Common flags: `--base`, `--head`, `--working-tree`, `--staged`, `--config`, `--n
 
 Exit codes: `0` success; `1` failed executed task or failed evaluation gate; `2` config/argument/base or doctor check error; `3` internal/I/O failure. API failures do not fail a normal plan or run by themselves.
 
-Base priority: CLI → config → GitHub PR base branch → `origin/main` → `main` → `master`. The comparison starts at the merge-base with head. Explicit invalid bases fail instead of silently choosing another branch. Fetch full history in CI.
+Base priority: CLI → config → detected CI target → `origin/HEAD` → `origin/main` → `main` → `master`. The comparison starts at the merge-base with head. Explicit invalid bases fail instead of silently choosing another branch. Fetch full history in CI.
 
 ## CI
 
@@ -147,6 +147,15 @@ Base priority: CLI → config → GitHub PR base branch → `origin/main` → `m
 ```
 
 Install dependencies first. Do not expose credentials to untrusted PR code. Nx, Turbo and other runners can be invoked as configured commands; no plugins are required.
+
+Target branches are detected from GitHub Actions, GitLab CI and Buildkite variables. CircleCI exposes the PR base as a pipeline value rather than a legacy job environment variable; map it to `CIRCLE_PR_BASE_BRANCH` in the job when using automatic detection. `--base` and `base` in configuration remain the explicit overrides.
+
+| CI | Base input |
+| --- | --- |
+| GitHub Actions | `GITHUB_BASE_REF` |
+| GitLab CI | merge-request diff base SHA, target branch, then default branch |
+| Buildkite | `BUILDKITE_PULL_REQUEST_BASE_BRANCH` |
+| CircleCI | `CIRCLE_PR_BASE_BRANCH` supplied from the PR base pipeline value |
 
 ## Agents
 

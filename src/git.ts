@@ -38,6 +38,30 @@ export interface ChangeOptions {
   workingTree?: boolean;
   staged?: boolean;
 }
+const branchRefs = (value: string | undefined) => {
+  const branch = value?.trim().replace(/^refs\/heads\//, "");
+  if (!branch || branch === "false") return [];
+  if (branch.startsWith("origin/") || /^[0-9a-f]{7,40}$/.test(branch))
+    return [branch];
+  return [`origin/${branch}`, branch];
+};
+export function detectCiBaseCandidates(env: NodeJS.ProcessEnv = process.env) {
+  const refs = [
+    ...branchRefs(env.GITHUB_BASE_REF),
+    ...(env.GITLAB_CI === "true"
+      ? [
+          ...branchRefs(env.CI_MERGE_REQUEST_DIFF_BASE_SHA),
+          ...branchRefs(env.CI_MERGE_REQUEST_TARGET_BRANCH_NAME),
+          ...branchRefs(env.CI_DEFAULT_BRANCH),
+        ]
+      : []),
+    ...(env.BUILDKITE === "true"
+      ? branchRefs(env.BUILDKITE_PULL_REQUEST_BASE_BRANCH)
+      : []),
+    ...(env.CIRCLECI === "true" ? branchRefs(env.CIRCLE_PR_BASE_BRANCH) : []),
+  ];
+  return [...new Set(refs)];
+}
 const hasUnsupportedPatch = (patch: string) =>
   /^Binary files .+ differ$/m.test(patch) ||
   /^[+-]Subproject commit [0-9a-f]{7,}(?:-dirty)?$/m.test(patch);
@@ -92,13 +116,12 @@ export async function collectChanges(
   const candidates = explicit
     ? [explicit]
     : [
-        process.env.GITHUB_BASE_REF
-          ? `origin/${process.env.GITHUB_BASE_REF}`
-          : undefined,
+        ...detectCiBaseCandidates(),
+        "origin/HEAD",
         "origin/main",
         "main",
         "master",
-      ].filter((x): x is string => !!x);
+      ];
   let base: string | undefined;
   for (const ref of candidates) {
     try {
